@@ -1,0 +1,22 @@
+<html>
+<head>
+  <title>SOI Countdown test</title>
+  <script src="soi_countdown.js"></script>
+  <script>
+  window.addEventListener("load", function() {
+      var targetSoiTime = parseInt((document.getElementsByName("vqxti")[0].value)) + 60 * 60;
+      countdown({
+        containerId: "countdown_container",
+        soiTimestamp: document.getElementsByName("vqxti")[0].value,
+        targetTime: targetSoiTime
+      });
+  });
+  </script>
+</head>
+<body>
+  <h1>SOI Countdown test</h1>
+  <div id="countdown_container"></div>
+
+  <input type="hidden" name="vqxti" value="1506185546">
+</body>
+</html>
