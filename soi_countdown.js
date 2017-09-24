@@ -212,7 +212,7 @@ function countdown(options) {
         var d = data[i];
 
         var isChange = true;
-        var points = d.points.map(point => {
+        var points = d.points.map(function (point) {
           var ret = isChange ? point + offset : point;
           isChange = !isChange;
           return ret;
