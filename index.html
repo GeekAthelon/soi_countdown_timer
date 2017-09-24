@@ -9,7 +9,11 @@
         containerId: "countdown_container",
         soiTimestamp: document.getElementsByName("vqxti")[0].value,
         targetTime: targetSoiTime,
-        useDays: false
+        useDays: false,
+        roomOwner: "Athelon",
+        currentUser:  document.getElementsByName("vqxha")[0].value,
+        dimColor: "rgba(0,0,127,0.05)",
+        fillColor: "rgba(127,0,127,0.95)",
       });
   });
   </script>
@@ -19,5 +23,6 @@
   <div id="countdown_container"></div>
 
   <input type="hidden" name="vqxti" value="1506185546">
+  <input type="hidden" name="vqxha" value="Athelon">
 </body>
 </html>

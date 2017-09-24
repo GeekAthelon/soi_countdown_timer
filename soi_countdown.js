@@ -8,6 +8,8 @@ function countdown(options) {
     return;
   }
 
+  options.dimColor = options.dimColor || "gray";
+
   if (!options.containerId) {
     alert("countdown: options.containerId cannot be blank");
     return;
@@ -34,56 +36,88 @@ function countdown(options) {
     return;
   }
 
-
   var startingSoiTime = new Date(options.soiTimestamp * 1000).getTime();
   var targetSoiTime = new Date(options.targetTime * 1000).getTime();
   var localTimeAtStart = new Date().getTime();
 
   container.innerHTML = getClockHtml();
 
-
   function timer() {
+
+    function dateMeasure(ms) {
+      function pad(i) {
+        return (i < 10) ? "0" + i : i;
+      }
+
+      var d, h, m, s;
+      s = Math.floor(ms / 1000);
+      m = Math.floor(s / 60);
+      s = s % 60;
+      h = Math.floor(m / 60);
+      m = m % 60;
+      d = Math.floor(h / 24);
+      h = h % 24;
+
+      return {
+        days: pad(d),
+        hours: pad(h),
+        minutes: pad(m),
+        seconds: pad(s)
+      };
+    };
+
     var currentTime = new Date().getTime();
     var elapsedTime = currentTime - localTimeAtStart;
 
     var currentSoiTime = startingSoiTime + elapsedTime;
-    var times = dateMeasure(targetSoiTime - currentSoiTime);
+    var timeLeft = targetSoiTime - currentSoiTime;
+    var svgElement = document.getElementById("countdown-timer");
 
-    document.getElementsByTagName('svg')[0].setAttribute('data-day', times.day);
-    document.getElementsByTagName('svg')[0].setAttribute('data-hour', times.hours);
-    document.getElementsByTagName('svg')[0].setAttribute('data-minute', times.minutes);
-    document.getElementsByTagName('svg')[0].setAttribute('data-second', times.seconds);
-    document.getElementsByTagName('svg')[0].classList.toggle('dots-on');
+    if (timeLeft > 0) {
+      var times = dateMeasure(timeLeft);
 
-    var delay = 500 - ((currentTime) % 500) ;
-    console.log(delay);
-    setTimeout(timer, delay);
-}
-timer();
-
-
-
-  function dateMeasure(ms) {
-    function pad(i) {
-      return (i < 10) ? "0" + i : i;
+      svgElement.setAttribute('data-day', times.day);
+      svgElement.setAttribute('data-hour', times.hours);
+      svgElement.setAttribute('data-minute', times.minutes);
+      svgElement.setAttribute('data-second', times.seconds);
+    } else {
+      svgElement.setAttribute('data-day', "00");
+      svgElement.setAttribute('data-hour', "00");
+      svgElement.setAttribute('data-minute', "00");
+      svgElement.setAttribute('data-second', "00");
     }
+    try {
+      svgElement.classList.toggle('dots-on');
+    } catch (err) {}
 
-    var d, h, m, s;
-    s = Math.floor(ms / 1000);
-    m = Math.floor(s / 60);
-    s = s % 60;
-    h = Math.floor(m / 60);
-    m = m % 60;
-    d = Math.floor(h / 24);
-    h = h % 24;
+    // Make sure we update twice a second, as close to on-time as we can.
+    var delay = 500 - ((currentTime) % 500);
+    setTimeout(timer, delay);
+  }
+  timer();
 
-    return {
-      days: pad(d),
-      hours: pad(h),
-      minutes: pad(m),
-      seconds: pad(s)
-    };
-  };
+  (function() {
+    var button = document.getElementById("soi_calc_time");
+    button.addEventListener("click", function() {
+
+      var offset = document.getElementById("soi_time_correct").value;
+      var displaySpan = document.getElementById("adjusted_time_display");
+      var eventDateStr = document.getElementById("soi_time_event").value;
+
+      var from = eventDateStr.split("-");
+      var eventDateMs = new Date(from[0], from[1] - 1, from[2]).getTime();
+      var offsetToMs = offset * 60 * 1000;
+
+      var soiEventDate = Math.floor((eventDateMs + offsetToMs) / 1000);
+      displaySpan.innerHTML = "Set <b>config.targetTime</b> to <b>" + soiEventDate + "</b>";
+
+      console.log("Offset", offset);
+      console.log("eventDateStr", eventDateStr);
+      console.log("eventDateMs", eventDateMs);
+      console.log("offsetToMs", offsetToMs);
+      console.log("soiEventDate", soiEventDate);
+    });
+  }());
 
   function getClockHtml() {
     var html = "";
@@ -131,7 +165,7 @@ timer();
           dotCount++;
         } else {
           html += '    <g class="digit digit-#digit">';
-          html += getDigitGuts(offset, "");
+          html += getDigitGuts(offset);
           html += '    </g>';
           digitCount++;
         }
@@ -141,7 +175,7 @@ timer();
       return html;
     }
 
-    function getDigitGuts(offset, fill) {
+    function getDigitGuts(offset) {
       var html = "";
 
       var data = [{
@@ -184,8 +218,7 @@ timer();
           return ret;
         });
 
-        line = '      <polygon class="#class" points="#points" fill="#fill" />';
-        line = replaceAll(line, "#fill", fill);
+        line = '      <polygon class="#class" points="#points"  />';
         line = replaceAll(line, "#class", d.class);
         line = replaceAll(line, "#points", points.join(" "));
 
@@ -195,15 +228,14 @@ timer();
       return html;
     }
 
-    html += '  <svg id="clock" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 552 88" class="dots-on" data-day="12" data-hour="34" data-minute="56" data-second="78">';
+    html += '  <svg id="countdown-timer" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 552 88" class="dots-on" data-day="12" data-hour="34" data-minute="56" data-second="78">';
     html += '    <title>Digital clock – time set via data attributes</title>';
     html += '    <style>';
-    html += '      .dots,';
-    html += '  	.digit {';
-    html += '  		fill: rgba(0,0,0,0.05);';
+    html += '      .dots, .digit {';
+    html += '  		fill:  ' + options.dimColor + ';';
     html += '  	}';
     html += '  	.dots-on .dots {';
-    html += '  		fill: black;';
+    html += '  		fill: ' + options.fillColor + ';';
     html += '  	}';
     html += '';
 
@@ -219,7 +251,7 @@ timer();
     }
 
     var initialPoint = 48;
-    html += '  	[data-second$="DUMMY_LINE"] .digit-DUMMY_LINE [class*="DUMMY_LINE"] { fill: black; }';
+    html += '  	[data-second$="DUMMY_LINE"] .digit-DUMMY_LINE [class*="DUMMY_LINE"] { fill: ' + options.fillColor + '; }';
     html += '';
     html += '    </style>';
 
@@ -229,6 +261,22 @@ timer();
       html += drawFace("12:34:56");
     }
     html += '  </svg>';
+
+    var canDisplayEditor = options.roomOwner === options.currentUser ? "block" : "none";
+
+    html += "<form action='#' style='display:" + canDisplayEditor + "'>";
+    html += "  <label>Your time to SOI Time correction (in minutes): <input type='number' id='soi_time_correct'></label>";
+    html += "  <br>"
+    html += "  <i>Note: This number will change as daylight savings time comes and goes.";
+    html += "  <br>This number may not be the same as what you see looking at SOI's clock";
+    html += "  <br>"
+    html += "  <span id='adjusted_time_display'>[nothing yet]</span>";
+    html += "  <br>"
+    html += "  <label>Event Date: <input id='soi_time_event' type='date'></label>";
+    html += "  <br>"
+    html += "  <button id='soi_calc_time' type='button'>Calculate</button>"
+    html += "</form>";
+
     return html;
   }
 }
